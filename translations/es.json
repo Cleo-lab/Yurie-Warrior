@@ -1,0 +1,61 @@
+{
+  "nav": {
+    "about": "Sobre Mí",
+    "blog": "Blog",
+    "gallery": "Galería",
+    "support": "Apoyar"
+  },
+  "hero": {
+    "title": "Hola, soy Yurie Jiyūbō",
+    "subtitle": "ユリエ・ジユウボウ"
+  },
+  "about": {
+    "title": "Sobre Mí",
+    "description": "Escribo sobre la vida, el arte y los momentos tranquilos que hacen brillar el mundo. Este es mi diario digital, donde los sueños se encuentran con la realidad en tonos pastel suave."
+  },
+  "blog": {
+    "title": "Diario de Sueños",
+    "readMore": "Leer Más"
+  },
+  "gallery": {
+    "title": "Galería de Arte",
+    "description": "Una colección de arte digital e inspiraciones"
+  },
+  "support": {
+    "title": "Apoya Mi Sueño",
+    "description": "Si disfrutas de mi contenido, considera apoyar mi viaje con criptomonedas",
+    "btcSupport": "Enviar Soporte en BTC",
+    "ethSupport": "Enviar Soporte en ETH",
+    "cryptoSupport": "Alimenta Mi Viaje"
+  },
+  "newsletter": {
+    "title": "Suscríbete a mi Diario de Sueños",
+    "description": "Recibe notificaciones cuando comparta nuevas publicaciones y arte",
+    "placeholder": "Ingresa tu correo",
+    "subscribe": "Suscribirse"
+  },
+  "footer": {
+    "copyright": "© 2025 Blog de Yurie ��� Hecho con amor",
+    "followMe": "Sígueme"
+  },
+  "auth": {
+    "login": "Iniciar Sesión",
+    "register": "Registrarse",
+    "name": "Nombre",
+    "namePlaceholder": "Tu nombre",
+    "email": "Correo Electrónico",
+    "emailPlaceholder": "tu@correo.com",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar Contraseña",
+    "cancel": "Cancelar",
+    "logout": "Cerrar Sesión",
+    "profile": "Mi Perfil"
+  },
+  "comments": {
+    "title": "Comentarios",
+    "placeholder": "Comparte tus pensamientos...",
+    "post": "Publicar Comentario",
+    "noComments": "Sin comentarios aún. ¡Sé el primero en compartir tus pensamientos!",
+    "loginRequired": "Inicia sesión para dejar un comentario"
+  }
+}

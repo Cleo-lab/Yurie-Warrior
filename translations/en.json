@@ -1,0 +1,61 @@
+{
+  "nav": {
+    "about": "About",
+    "blog": "Blog",
+    "gallery": "Gallery",
+    "support": "Support"
+  },
+  "hero": {
+    "title": "Hi, I'm Yurie Jiyūbō",
+    "subtitle": "ユリエ・ジユウボウ"
+  },
+  "about": {
+    "title": "About Me",
+    "description": "I write about life, art, and the quiet moments that make the world shine. This is my digital diary, where dreams meet reality in soft pastel hues."
+  },
+  "blog": {
+    "title": "Dream Journal",
+    "readMore": "Read More"
+  },
+  "gallery": {
+    "title": "Art Gallery",
+    "description": "A collection of digital art and inspirations"
+  },
+  "support": {
+    "title": "Support My Dream",
+    "description": "If you enjoy my content, consider supporting my journey with crypto",
+    "btcSupport": "Send BTC Support",
+    "ethSupport": "Send ETH Support",
+    "cryptoSupport": "Fuel My Journey"
+  },
+  "newsletter": {
+    "title": "Subscribe to my Dream Journal",
+    "description": "Get notified when I share new posts and art",
+    "placeholder": "Enter your email",
+    "subscribe": "Subscribe"
+  },
+  "footer": {
+    "copyright": "© 2025 Yurie's Blog — Made with love",
+    "followMe": "Follow Me"
+  },
+  "auth": {
+    "login": "Sign In",
+    "register": "Register",
+    "name": "Name",
+    "namePlaceholder": "Your name",
+    "email": "Email",
+    "emailPlaceholder": "your@email.com",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "cancel": "Cancel",
+    "logout": "Sign Out",
+    "profile": "My Profile"
+  },
+  "comments": {
+    "title": "Comments",
+    "placeholder": "Share your thoughts...",
+    "post": "Post Comment",
+    "noComments": "No comments yet. Be the first to share your thoughts!",
+    "loginRequired": "Sign in to leave a comment"
+  }
+}
