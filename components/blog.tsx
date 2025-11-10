@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, Suspense, lazy } from "react"
+import { useState, Suspense, lazy, useEffect } from "react"
 import Image from "next/image"
 import { useI18n } from "@/context/i18n-context"
+import { supabase } from "@/lib/supabase"
 
 const Comments = lazy(() => import("@/components/comments"))
 
@@ -11,7 +12,7 @@ interface Post {
   title: string
   excerpt: string
   date: string
-  image: string
+  image_url: string | null
   content: string
 }
 
@@ -28,7 +29,7 @@ function BlogPostCards({ posts, onSelectPost }: { posts: Post[]; onSelectPost: (
         >
           <div className="blog-card-image relative h-48 bg-border overflow-hidden">
             <Image
-              src={post.image || "/placeholder.svg"}
+              src={post.image_url || "/placeholder.svg"}
               alt={post.title}
               fill
               sizes="(max-width: 768px) 100vw, 33vw"
@@ -77,7 +78,7 @@ function BlogModal({ post, onClose }: { post: Post; onClose: () => void }) {
 
         <div className="blog-modal-body p-6 space-y-4">
           <Image
-            src={post.image || "/placeholder.svg"}
+            src={post.image_url || "/placeholder.svg"}
             alt={post.title}
             width={600}
             height={400}
@@ -102,43 +103,57 @@ function BlogModal({ post, onClose }: { post: Post; onClose: () => void }) {
 export default function Blog() {
   const { t } = useI18n()
   const [selectedPost, setSelectedPost] = useState<Post | null>(null)
+  const [posts, setPosts] = useState<Post[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const posts: Post[] = [
-    {
-      id: 1,
-      title: "My Favorite Anime Worlds",
-      excerpt: "Exploring the digital worlds that inspire my art...",
-      date: "2025-01-15",
-      image: "/anime-scenery.jpg",
-      content:
-        "There are so many incredible anime worlds that have shaped my creativity. From the neon streets of Neo-Tokyo to the peaceful countryside of Studio Ghibli films, each world tells a story...",
-    },
-    {
-      id: 2,
-      title: "A Quiet Night Under Neon Skies",
-      excerpt: "Reflections on solitude and the beauty of the night...",
-      date: "2025-01-10",
-      image: "/neon-night-city.jpg",
-      content:
-        "Sometimes the best moments are the quiet ones. When the city lights blur into stars and you can hear your own thoughts clearly. Tonight, sitting by the window, I felt truly alive...",
-    },
-    {
-      id: 3,
-      title: "Dreams Smell Like Rain and Coffee",
-      excerpt: "A sensory journey through my creative process...",
-      date: "2025-01-05",
-      image: "/cozy-coffee-desk.jpg",
-      content:
-        "Every dream I chase smells like fresh rain and warm coffee. These are the scents that ground me when my imagination flies too far. They remind me that creativity is rooted in simple pleasures...",
-    },
-  ]
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("posts")
+          .select("id, title, excerpt, content, image_url, date")
+          .order("date", { ascending: false })
+
+        if (error) throw error
+
+        const formattedPosts = data?.map((post) => ({
+          ...post,
+          id: Number(post.id),
+        })) || []
+
+        setPosts(formattedPosts)
+      } catch (error) {
+        console.error("Error fetching posts:", error)
+        setPosts([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchPosts()
+  }, [])
+
+  if (loading) {
+    return (
+      <section id="blog" className="blog-section py-20 px-4 bg-background">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="blog-title text-4xl font-heading font-bold mb-12 text-center">{t("blog.title")}</h2>
+          <div className="text-center text-foreground/60">Loading posts...</div>
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section id="blog" className="blog-section py-20 px-4 bg-background">
       <div className="max-w-6xl mx-auto">
         <h2 className="blog-title text-4xl font-heading font-bold mb-12 text-center">{t("blog.title")}</h2>
 
-        <BlogPostCards posts={posts} onSelectPost={setSelectedPost} />
+        {posts.length === 0 ? (
+          <div className="text-center text-foreground/60">No posts yet. Check back soon!</div>
+        ) : (
+          <BlogPostCards posts={posts} onSelectPost={setSelectedPost} />
+        )}
 
         {selectedPost && <BlogModal post={selectedPost} onClose={() => setSelectedPost(null)} />}
       </div>
