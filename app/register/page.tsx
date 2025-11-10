@@ -61,16 +61,28 @@ export default function RegisterPage() {
       }
 
       if (authData.user) {
-        const { error: profileError } = await supabase.from("profiles").insert({
-          id: authData.user.id,
-          name: formData.name,
-          email: formData.email,
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.email}`,
-        })
+        try {
+          const { error: profileError } = await supabase.from("profiles").insert({
+            id: authData.user.id,
+            name: formData.name,
+            email: formData.email,
+            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.email}`,
+          })
 
-        if (profileError) {
-          setError(profileError.message)
-          setLoading(false)
+          if (profileError) {
+            // Если ошибка "duplicate key" — профиль уже существует, просто переходим на verify
+            if (profileError.message.includes("duplicate key")) {
+              router.push("/verify-email")
+              return
+            }
+            setError(profileError.message)
+            setLoading(false)
+            return
+          }
+        } catch (profileErr) {
+          console.error("Profile creation error:", profileErr)
+          // Все равно переходим на verify-email, т.к. регистрация в auth прошла успешно
+          router.push("/verify-email")
           return
         }
 
@@ -82,9 +94,8 @@ export default function RegisterPage() {
           confirmPassword: "",
         })
 
-        setTimeout(() => {
-          router.push("/verify-email")
-        }, 2000)
+        // Перенаправить сразу, без задержки
+        router.push("/verify-email")
       }
     } catch (err) {
       setError("An error occurred. Please try again.")

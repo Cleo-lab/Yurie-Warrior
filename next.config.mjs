@@ -1,13 +1,19 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export', // <-- Добавь эту строку
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   images: {
-    unoptimized: true, // Это нужно, потому что GitHub Pages не поддерживает оптимизацию изображений
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co',
+      },
+    ],
   },
-  // trailingSlash: true, // (Опционально) Если хочешь, чтобы URLs были с "/" в конце
+  compress: true,
+  productionBrowserSourceMaps: false,
 }
 
 export default nextConfig

@@ -171,31 +171,65 @@ export default function ProfilePage() {
     setError("")
 
     try {
-      const fileName = `${user.id}-${Date.now()}`
-      const { error: uploadError, data } = await supabase.storage
-        .from("avatars")
-        .upload(fileName, file, { upsert: true })
+      const fileName = `${user.id}-${Date.now()}-${file.name}`
 
-      if (uploadError) throw uploadError
+      const { error: uploadError } = await supabase.storage
+        .from("avatar")
+        .upload(fileName, file)
 
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("avatars").getPublicUrl(fileName)
+      if (uploadError) {
+        const errorMessage = uploadError?.message || JSON.stringify(uploadError) || "Unknown storage error"
+        console.error("Storage upload error:", errorMessage)
+        setError(`Failed to upload avatar: ${errorMessage}`)
+        setIsSaving(false)
+        return
+      }
+
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      const publicUrl = `${supabaseUrl}/storage/v1/object/public/avatar/${fileName}`
 
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ avatar: publicUrl })
         .eq("id", user.id)
 
-      if (updateError) throw updateError
+      if (updateError) {
+        const errorMessage = updateError?.message || JSON.stringify(updateError) || "Unknown update error"
+        console.error("Profile update error:", errorMessage)
+        setError(`Failed to update profile: ${errorMessage}`)
+        setIsSaving(false)
+        return
+      }
 
       setSuccess("Avatar updated successfully!")
+
+      // Перезагрузить данные пользователя
+      const { data: updatedProfile } = await supabase
+        .from("profiles")
+        .select("id, name, email, avatar")
+        .eq("id", user.id)
+        .single()
+
+      if (updatedProfile) {
+        // Обновить user в контексте через перезагрузку страницы или обновление контекста
+        // Для простоты: перезагружаем страницу после успеха
+        setTimeout(() => {
+          window.location.reload()
+        }, 1000)
+      }
+
       setTimeout(() => {
         setSuccess("")
       }, 3000)
     } catch (err) {
-      setError("Failed to upload avatar")
-      console.error("Upload error:", err)
+      let errorMsg = "Unknown error"
+      if (err instanceof Error) {
+        errorMsg = err.message
+      } else if (typeof err === "object" && err !== null) {
+        errorMsg = JSON.stringify(err)
+      }
+      console.error("Avatar upload error:", errorMsg)
+      setError(`Failed to upload avatar: ${errorMsg}`)
     } finally {
       setIsSaving(false)
     }
@@ -217,13 +251,20 @@ export default function ProfilePage() {
     <div className="min-h-screen pt-24 pb-12 px-4 bg-background">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center gap-3">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-neon to-glow bg-clip-text text-transparent">
             My Profile
           </h1>
-          <Button onClick={handleLogout} variant="outline" className="bg-red-500/20 hover:bg-red-500/30 border-red-500/50">
-            🚪 Logout
-          </Button>
+          <div className="flex gap-2">
+            <Link href="/#blog">
+              <Button variant="outline" className="bg-neon/20 hover:bg-neon/30 border-neon text-neon">
+                ← Back to Blog
+              </Button>
+            </Link>
+            <Button onClick={handleLogout} variant="outline" className="bg-red-500/20 hover:bg-red-500/30 border-red-500/50">
+              🚪 Logout
+            </Button>
+          </div>
         </div>
 
         {success && (
@@ -246,7 +287,7 @@ export default function ProfilePage() {
               <img
                 src={user.avatar || "/placeholder.svg"}
                 alt={user.name}
-                className="w-24 h-24 rounded-full border-2 border-neon object-cover"
+                className="w-32 h-32 rounded-full border-2 border-neon object-contain bg-accent/10"
               />
               <label className="text-xs text-neon hover:text-glow cursor-pointer transition-colors">
                 Change Avatar

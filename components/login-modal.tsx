@@ -4,7 +4,6 @@ import type React from "react"
 
 import { useState } from "react"
 import { useI18n } from "@/context/i18n-context"
-import { useAuth } from "@/context/auth-context"
 import { Button } from "@/components/ui/button"
 
 interface LoginModalProps {
@@ -14,14 +13,12 @@ interface LoginModalProps {
 
 export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const { t } = useI18n()
-  const { login } = useAuth()
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (name.trim() && email.trim()) {
-      login(name, email)
       setName("")
       setEmail("")
       onClose()

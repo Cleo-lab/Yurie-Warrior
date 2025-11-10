@@ -138,7 +138,7 @@
   }
 }
 
-/* Smooth fade-in animations */
+/* Optimized animations with GPU acceleration */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -171,26 +171,27 @@
 
 .fade-in {
   animation: fadeIn 0.6s ease-in-out;
+  will-change: opacity;
 }
 
 .slide-up {
   animation: slideUp 0.6s ease-out;
+  will-change: transform, opacity;
 }
 
 .glow-effect {
   animation: glow 2s ease-in-out infinite;
+  will-change: box-shadow;
 }
 
-/* Custom cursor styling */
+/* Cursor optimization: Use system cursors for better performance */
 * {
-  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><text x="8" y="24" font-size="24">✨</text></svg>')
-    4 4, auto;
+  cursor: auto;
 }
 
 a,
 button {
-  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><text x="8" y="24" font-size="24">✨</text></svg>')
-    4 4, pointer;
+  cursor: pointer;
 }
 
 /* Smooth transitions */
