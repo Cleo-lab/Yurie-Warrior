@@ -16,7 +16,7 @@ export default function Support() {
   }
 
   return (
-    <section id="support" className="py-20 px-4 bg-background">
+    <section id="support" className="py-20 px-4 bg-background hidden">
       <div className="max-w-3xl mx-auto">
         <h2 className="text-4xl font-heading font-bold mb-4 text-center">{t("support.title")} ✨</h2>
         <p className="text-center text-foreground/70 mb-12 text-lg">{t("support.description")}</p>
