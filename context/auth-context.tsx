@@ -81,7 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initAuth()
 
     try {
-      const { data: { subscription }, error: subError } = supabase.auth.onAuthStateChange(async (event, session) => {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
         if (session?.user) {
           const profile = await fetchProfile(session.user.id)
           if (profile) {
@@ -92,9 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       })
 
-      if (subError) {
-        console.error('Error setting up auth subscription:', subError)
-      }
+      
 
       return () => {
         subscription?.unsubscribe()
