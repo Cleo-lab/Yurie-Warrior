@@ -47,9 +47,17 @@ export default function ImageUploader({ onImageUrl, bucket = "blog-images" }: Im
       onImageUrl(publicUrl)
       setProgress(100)
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Upload failed"
+      let errorMessage = "Upload failed"
+
+      if (err instanceof Error) {
+        errorMessage = err.message
+      } else if (typeof err === 'object' && err !== null) {
+        const errorObj = err as Record<string, any>
+        errorMessage = errorObj.message || errorObj.error?.message || JSON.stringify(err)
+      }
+
       setError(errorMessage)
-      console.error("Upload error:", err)
+      console.error("Upload error details:", { err, message: errorMessage })
     } finally {
       setUploading(false)
     }

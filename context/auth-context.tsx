@@ -59,7 +59,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession()
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+
+        if (sessionError) {
+          console.error('Error getting session:', sessionError)
+        }
 
         if (session?.user) {
           const profile = await fetchProfile(session.user.id)
@@ -76,19 +80,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initAuth()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        const profile = await fetchProfile(session.user.id)
-        if (profile) {
-          setUser(profile)
+    try {
+      const { data: { subscription }, error: subError } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (session?.user) {
+          const profile = await fetchProfile(session.user.id)
+          if (profile) {
+            setUser(profile)
+          }
+        } else {
+          setUser(null)
         }
-      } else {
-        setUser(null)
-      }
-    })
+      })
 
-    return () => {
-      subscription?.unsubscribe()
+      if (subError) {
+        console.error('Error setting up auth subscription:', subError)
+      }
+
+      return () => {
+        subscription?.unsubscribe()
+      }
+    } catch (error) {
+      console.error('Auth subscription setup error:', error)
+      return undefined
     }
   }, [fetchProfile])
 

@@ -49,7 +49,15 @@ export default function AdminNewsletter() {
         body: JSON.stringify({ postTitle, postExcerpt, postUrl }),
       })
 
-      const data = await response.json()
+      let data
+      try {
+        data = await response.json()
+      } catch (parseError) {
+        setResult(`Error: Failed to parse response - ${parseError}`)
+        setSending(false)
+        return
+      }
+
       setResult(JSON.stringify(data, null, 2))
 
       if (response.ok) {
@@ -57,10 +65,12 @@ export default function AdminNewsletter() {
         setPostTitle('')
         setPostExcerpt('')
         setPostUrl('')
+      } else {
+        alert(`❌ Failed to send: ${data?.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Send error:', error)
-      setResult(`Error: ${error}`)
+      setResult(`Error: ${error instanceof Error ? error.message : String(error)}`)
     } finally {
       setSending(false)
     }

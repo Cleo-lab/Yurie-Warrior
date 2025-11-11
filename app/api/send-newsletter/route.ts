@@ -1,25 +1,38 @@
 import { Resend } from 'resend'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const resendApiKey = process.env.RESEND_API_KEY
 
-/* ➜ ➜ ➜  БЛОК ПРОВЕРКИ АВТОРИЗАЦИИ  ➜ ➜ ➜ */
-function isAuthorized(req: Request): boolean {
-  const header = req.headers.get('authorization') // "Bearer admin-token"
-  return header === 'Bearer admin-token'
+if (!resendApiKey) {
+  console.warn('Missing RESEND_API_KEY environment variable')
 }
-/* ➜ ➜ ➜  КОНЕЦ БЛОКА  ➜ ➜ ➜ */
 
-export async function POST(request: Request) {
-  /* ➜ ➜ ➜  ЗАЩИТА  ➜ ➜ ➜ */
-  if (!isAuthorized(request)) {
+const resend = resendApiKey ? new Resend(resendApiKey) : null
+
+export async function POST(request: NextRequest) {
+  const authHeader = request.headers.get('authorization')
+
+  if (authHeader !== 'Bearer admin-token') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  /* ➜ ➜ ➜  КОНЕЦ ЗАЩИТЫ  ➜ ➜ ➜ */
+
+  if (!resend) {
+    return NextResponse.json(
+      { error: 'Newsletter service not configured. Please set RESEND_API_KEY.' },
+      { status: 500 }
+    )
+  }
 
   try {
-    const { postTitle, postExcerpt, postUrl } = await request.json()
+    let payload
+    try {
+      payload = await request.json()
+    } catch (parseError) {
+      return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 })
+    }
+
+    const { postTitle, postExcerpt, postUrl } = payload
 
     const { data: subscribers, error } = await supabase
       .from('newsletter_subscribers')
