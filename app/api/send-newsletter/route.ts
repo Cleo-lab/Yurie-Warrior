@@ -1,6 +1,7 @@
 import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 
 const resendApiKey = process.env.RESEND_API_KEY
 
@@ -11,10 +12,42 @@ if (!resendApiKey) {
 const resend = resendApiKey ? new Resend(resendApiKey) : null
 
 export async function POST(request: NextRequest) {
+  // Создаём Supabase клиент для сервера (с сервисным ключом если нужно проверять)
   const authHeader = request.headers.get('authorization')
+  const bearerToken = authHeader?.replace('Bearer ', '')
 
-  if (authHeader !== 'Bearer admin-token') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  // Для корректной проверки нужно использовать токен из заголовка
+  // В реальном приложении здесь должна быть проверка через JWT
+  
+  if (!bearerToken) {
+    return NextResponse.json({ error: 'Unauthorized: No token' }, { status: 401 })
+  }
+
+  // Проверяем email через передачу токена (на клиенте отправляется accessToken Supabase)
+  // Если есть accessToken, то пользователь аутентифицирован
+  // Проверим через наш Supabase клиент в read-only режиме
+  const supabaseWithAuth = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+    {
+      global: {
+        headers: {
+          Authorization: `Bearer ${bearerToken}`,
+        },
+      },
+    }
+  )
+
+  // Проверяем сессию пользователя
+  const { data: { user }, error: authError } = await supabaseWithAuth.auth.getUser()
+
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized: Invalid token' }, { status: 401 })
+  }
+
+  // Проверяем, что это правильный администратор
+  if (user.email !== 'cleopatrathequeenofcats@gmail.com') {
+    return NextResponse.json({ error: 'Forbidden: Only admin can send newsletters' }, { status: 403 })
   }
 
   if (!resend) {

@@ -93,26 +93,23 @@ export default function AdminDashboard() {
 
   
 
-  // Auth check
+  // Auth check - проверяем только email cleopatrathequeenofcats@gmail.com
 useEffect(() => {
   const checkAuth = async () => {
-    // Проверяем сессию Supabase
     const { data: { session } } = await supabase.auth.getSession()
     
-    if (!session) {
-      router.replace('/admin/login')
-    } else {
-      setAuthorized(true)
+    // Если нет сессии или email не совпадает
+    if (!session || session.user.email !== 'cleopatrathequeenofcats@gmail.com') {
+      router.replace('/')
+      return
     }
+    
+    setAuthorized(true)
   }
   
   checkAuth()
 }, [router])
-const handleLogout = async () => {
-  await supabase.auth.signOut()
-  localStorage.removeItem('adminToken')
-  router.replace('/admin/login')
-}
+
 
   // Fetch data when tab changes
   useEffect(() => {
@@ -145,8 +142,8 @@ const handleLogout = async () => {
 
       if (error) throw error
       setPosts(data || [])
-    } catch (error) {
-      console.error("Error fetching posts:", error)
+    } catch (err) {
+      console.error("Error fetching posts:", err)
       alert("Failed to fetch posts")
     } finally {
       setPostsLoading(false)
@@ -199,8 +196,8 @@ const handleLogout = async () => {
       setEditingPostId(null)
       setShowPostForm(false)
       fetchPosts()
-    } catch (error) {
-      console.error("Error saving post:", error)
+    } catch (err) {
+      console.error("Error saving post:", err)
       alert("Failed to save post")
     }
   }
@@ -226,8 +223,8 @@ const handleLogout = async () => {
       if (error) throw error
       alert("Post deleted successfully!")
       fetchPosts()
-    } catch (error) {
-      console.error("Error deleting post:", error)
+    } catch (err) {
+      console.error("Error deleting post:", err)
       alert("Failed to delete post")
     }
   }
@@ -255,8 +252,8 @@ const handleLogout = async () => {
 
       if (error) throw error
       setSubscribers(data || [])
-    } catch (error) {
-      console.error("Error fetching subscribers:", error)
+    } catch (err) {
+      console.error("Error fetching subscribers:", err)
       alert("Failed to fetch subscribers")
     } finally {
       setSubscribersLoading(false)
@@ -275,8 +272,8 @@ const handleLogout = async () => {
       if (error) throw error
       alert("Subscriber removed")
       fetchSubscribers()
-    } catch (error) {
-      console.error("Error deleting subscriber:", error)
+    } catch (err) {
+      console.error("Error deleting subscriber:", err)
       alert("Failed to remove subscriber")
     }
   }
@@ -305,8 +302,8 @@ const handleLogout = async () => {
       }))
 
       setComments(commentsWithPostTitle as Comment[])
-    } catch (error) {
-      console.error("Error fetching comments:", error)
+    } catch (err) {
+      console.error("Error fetching comments:", err)
       alert("Failed to fetch comments")
     } finally {
       setCommentsLoading(false)
@@ -325,8 +322,8 @@ const handleLogout = async () => {
       if (error) throw error
       alert("Comment deleted")
       fetchComments()
-    } catch (error) {
-      console.error("Error deleting comment:", error)
+    } catch (err) {
+      console.error("Error deleting comment:", err)
       alert("Failed to delete comment")
     }
   }
@@ -354,8 +351,8 @@ const handleLogout = async () => {
       setReplyingTo(null)
       setReplyText("")
       fetchComments()
-    } catch (error) {
-      console.error("Error posting reply:", error)
+    } catch (err) {
+      console.error("Error posting reply:", err)
       alert("Failed to post reply")
     }
   }
@@ -379,8 +376,8 @@ const handleLogout = async () => {
       } else {
         setGalleryItems(data || [])
       }
-    } catch (error) {
-      console.error("Error fetching gallery:", error)
+    } catch (err) {
+      console.error("Error fetching gallery:", err)
       setGalleryItems([])
     } finally {
       setGalleryLoading(false)
@@ -388,12 +385,21 @@ const handleLogout = async () => {
   }
 
   const handleAddGalleryItem = async (e: React.FormEvent) => {
-    e.preventDefault()
+  e.preventDefault()
 
-    if (!galleryForm.title || !galleryForm.image_url) {
-      alert("Title and image are required")
-      return
-    }
+  // 1. Валидация формы
+  if (!galleryForm.title || !galleryForm.image_url) {
+    alert("Title and image are required")
+    return
+  }
+
+  // 2. Проверка сессии и email
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session || session.user.email !== 'cleopatrathequeenofcats@gmail.com') {
+    alert("Unauthorized: Only admin can add gallery items")
+    router.replace('/')
+    return
+  }
 
     try {
       const { error } = await supabase
@@ -416,8 +422,8 @@ const handleLogout = async () => {
       setGalleryForm({ title: "", description: "", image_url: "" })
       setShowGalleryForm(false)
       fetchGallery()
-    } catch (error) {
-      console.error("Error adding gallery item:", error)
+    } catch (err) {
+      console.error("Error adding gallery item:", err)
       alert("Failed to add gallery item")
     }
   }
@@ -434,8 +440,8 @@ const handleLogout = async () => {
       if (error) throw error
       alert("Image deleted")
       fetchGallery()
-    } catch (error) {
-      console.error("Error deleting gallery item:", error)
+    } catch (err) {
+      console.error("Error deleting gallery item:", err)
       alert("Failed to delete image")
     }
   }
@@ -450,11 +456,20 @@ const handleSendNewsletter = async () => {
   setNewsletterResult("")
 
   try {
+    // Получаем accessToken из Supabase сессии
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    if (!session?.access_token) {
+      alert("Session expired. Please refresh the page and try again.")
+      setSendingNewsletter(false)
+      return
+    }
+
     const response = await fetch("/api/send-newsletter", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: "Bearer admin-token",
+        Authorization: `Bearer ${session.access_token}`,
       },
       body: JSON.stringify({
         postTitle: postTitleForNewsletter,
@@ -474,9 +489,9 @@ const handleSendNewsletter = async () => {
     } else {
       alert(`❌ Failed to send: ${data?.error || "Unknown error"}`)
     }
-  } catch (error) {
-    console.error("Newsletter send error:", error)
-    setNewsletterResult(`Error: ${error}`)
+  } catch (err) {
+    console.error("Newsletter send error:", err)
+    setNewsletterResult(`Error: ${err}`)
   } finally {
     setSendingNewsletter(false)
   }
@@ -485,10 +500,10 @@ const handleSendNewsletter = async () => {
   // ========== UI RENDERING ==========
   if (!authorized) return null
 
-  const handleLogout = () => {
-    localStorage.removeItem("adminToken")
-    router.replace("/admin/login")
-  }
+  const handleLogout = async () => {
+  await supabase.auth.signOut()
+  router.replace('/')
+}
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-4 bg-background">
