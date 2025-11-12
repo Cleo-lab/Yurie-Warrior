@@ -94,14 +94,25 @@ export default function AdminDashboard() {
   
 
   // Auth check
-  useEffect(() => {
-    const token = localStorage.getItem("adminToken")
-    if (token !== "admin-token") {
-      router.replace("/admin/login")
+useEffect(() => {
+  const checkAuth = async () => {
+    // Проверяем сессию Supabase
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    if (!session) {
+      router.replace('/admin/login')
     } else {
       setAuthorized(true)
     }
-  }, [router])
+  }
+  
+  checkAuth()
+}, [router])
+const handleLogout = async () => {
+  await supabase.auth.signOut()
+  localStorage.removeItem('adminToken')
+  router.replace('/admin/login')
+}
 
   // Fetch data when tab changes
   useEffect(() => {

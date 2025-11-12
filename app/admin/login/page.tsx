@@ -2,69 +2,81 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 
 export default function AdminLogin() {
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
-  const handleLogin = async () => {
-    if (!password) {
-      alert('❌ Please enter a password')
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!email || !password) {
+      alert('⛔ Please enter email and password')
       return
     }
 
     setLoading(true)
     try {
-      const res = await fetch('/api/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       })
 
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`)
-      }
+      if (error) throw error
 
-      let data
-      try {
-        data = await res.json()
-      } catch (parseError) {
-        throw new Error('Failed to parse response')
+      if (data.session) {
+        localStorage.setItem('adminToken', 'admin-token') // Для обратной совместимости
+        router.push('/admin/blog')
       }
-
-      if (data.success) {
-        localStorage.setItem('adminToken', data.token)
-        router.push('/admin/newsletter')
-      } else {
-        alert('❌ Wrong password')
-      }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error)
-      alert(`❌ Login failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      alert(`⛔ Login failed: ${error.message}`)
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="bg-accent/20 p-8 rounded-xl border border-border max-w-sm w-full">
-        <h1 className="text-2xl font-bold mb-4">Admin Login</h1>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full px-4 py-2 border border-border rounded mb-4"
-          placeholder="Enter password"
-        />
-        <button
-          onClick={handleLogin}
-          disabled={loading}
-          className="w-full bg-neon text-background font-bold py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? 'Logging in...' : 'Login'}
-        </button>
+        <h1 className="text-2xl font-bold mb-6 text-center">🔐 Admin Login</h1>
+        
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:border-neon"
+              placeholder="admin@yourblog.com"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:border-neon"
+              placeholder="Enter password"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-neon text-background font-bold py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+          >
+            {loading ? '🔄 Logging in...' : '✅ Login'}
+          </button>
+        </form>
       </div>
     </div>
   )
