@@ -47,6 +47,7 @@ type AdminTab = "posts" | "newsletter" | "comments" | "gallery" | "send-newslett
 export default function AdminDashboard() {
   const router = useRouter()
   const [authorized, setAuthorized] = useState(false)
+  const [authChecking, setAuthChecking] = useState(true)
   const [activeTab, setActiveTab] = useState<AdminTab>("posts")
 
   // Posts state
@@ -93,18 +94,35 @@ export default function AdminDashboard() {
 
   
 
-  // Auth check - проверяем только email cleopatrathequeenofcats@gmail.com
+    // Auth check - проверяем только email cleopatrathequeenofcats@gmail.com
 useEffect(() => {
   const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    
-    // Если нет сессии или email не совпадает
-    if (!session || session.user.email !== 'cleopatrathequeenofcats@gmail.com') {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      // Если нет сессии - редиректим на главную
+      if (!session) {
+        console.log('No session found, redirecting to home')
+        router.replace('/')
+        return
+      }
+      
+      // Проверяем email админа
+      const userEmail = session.user.email
+      console.log('User email:', userEmail)
+      
+      if (userEmail !== 'cleopatrathequeenofcats@gmail.com') {
+        console.log('Not admin email, redirecting to home')
+        router.replace('/')
+        return
+      }
+      
+      // Всё ок - показываем админ-панель
+      setAuthorized(true)
+    } catch (error) {
+      console.error('Auth check error:', error)
       router.replace('/')
-      return
     }
-    
-    setAuthorized(true)
   }
   
   checkAuth()
@@ -498,7 +516,29 @@ const handleSendNewsletter = async () => {
 }
 
   // ========== UI RENDERING ==========
-  if (!authorized) return null
+  if (authChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="mb-4 inline-block">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neon"></div>
+          </div>
+          <p className="text-foreground/60">Checking authorization...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!authorized) {
+    return (
+      <div className="min-h-screen pt-24 pb-12 px-4 bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neon mx-auto mb-4"></div>
+          <p className="text-foreground/60">Checking authorization...</p>
+        </div>
+      </div>
+    )
+  }
 
   const handleLogout = async () => {
   await supabase.auth.signOut()

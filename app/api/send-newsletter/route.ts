@@ -12,23 +12,23 @@ if (!resendApiKey) {
 const resend = resendApiKey ? new Resend(resendApiKey) : null
 
 export async function POST(request: NextRequest) {
-  // Создаём Supabase клиент для сервера (с сервисным ключом если нужно проверять)
+  // Проверяем есть ли токен
   const authHeader = request.headers.get('authorization')
   const bearerToken = authHeader?.replace('Bearer ', '')
 
-  // Для корректной проверки нужно использовать токен из заголовка
-  // В реальном приложении здесь должна быть проверка через JWT
-  
   if (!bearerToken) {
     return NextResponse.json({ error: 'Unauthorized: No token' }, { status: 401 })
   }
 
-  // Проверяем email через передачу токена (на клиенте отправляется accessToken Supabase)
-  // Если есть accessToken, то пользователь аутентифицирован
-  // Проверим через наш Supabase клиент в read-only режиме
+  // Проверяем что keys установлены
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return NextResponse.json({ error: 'Server misconfigured: Missing Supabase credentials' }, { status: 500 })
+  }
+
+  // Создаём Supabase клиент для сервера с JWT токеном
   const supabaseWithAuth = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       global: {
         headers: {
