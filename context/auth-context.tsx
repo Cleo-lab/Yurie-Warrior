@@ -50,8 +50,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         profileCache.set(userId, userProfile)
         return userProfile
       }
-    } catch (error) {
-      console.error('Error fetching profile:', error)
+    } catch (err) {
+      console.error('Error fetching profile:', err)
     }
     return null
   }, [])
